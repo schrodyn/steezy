@@ -1,5 +1,11 @@
 #!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
+# See LICENSE. schrodinger@konundrum.org.
+"""Steezy Yara rule Generator.
+
+Python script written to make a lazy Irish person do less work.
+"""
+
 import re
 import sys
 import logging
@@ -15,7 +21,7 @@ logger = logging.getLogger(__name__)
 re_chunk = re.compile('^\$chunk.+ = (\{[^\}]+\})')
 
 # Hey mkYara - Yoink!
-#class StringType(object):
+# Taken from Fox-It mkYara, https://github.com/fox-it/mkyara
 class StringType():
     STRING = 1
     HEX = 2
@@ -40,6 +46,7 @@ def mk_yara(opcodes, bits=32):
     return rule_str.replace('\t', ' ').replace('\n', '')
 
 # Hey mkYara - Yoink!
+# Taken from Fox-It mkYara, https://github.com/fox-it/mkyara
 def mk_yara_getrule(rule):
     for s in rule.strings:
         if s.string_type == StringType.STRING:
@@ -91,6 +98,7 @@ def gen_r2_yara_wild(r2, fcn_va):
 
             fcn_hex_bytes = instr['bytes']
 
+            # TODO: modrm nibbles.
             #if 'modrm' in instr['opex'] and\
             #    instr['opex']['modrm'] is True:
 
@@ -109,9 +117,6 @@ def gen_r2_yara_wild(r2, fcn_va):
             logging.debug("Yara string %s" % yara)
             rule += yara
 
-            #else:
-            #    rule += fcn_hex_bytes
-
     logging.debug("Yara rule %s" % rule)
 
     return f"$r2_wildcard_{fcn_va} = {{{rule}}}"
@@ -122,7 +127,6 @@ def gen_yara_rule(rules: dict, rulename=None):
 
         if rulename is None:
             rulename = f"rule_{file_md5}"
-
 
         print(f"\nrule {rulename} {{\n")
 
@@ -162,7 +166,9 @@ class MyParser(argparse.ArgumentParser):
 
 def main():
 
-    parser = MyParser(description='Generate Yara rule from function offsets.')
+    parser = MyParser(
+            description='Generate Yara rule from function offsets.')
+
     parser.add_argument("-n", "--rulename")
     parser.add_argument("-f", "--filepath", required=True)
     parser.add_argument("-o", "--offsets", required=True, nargs='+')
@@ -190,7 +196,7 @@ def main():
     # file info
     file_info = r2.cmdj('iIj')
     file_bits = file_info['bits']
-    file_md5  = r2.cmdj('itj')['md5']
+    file_md5 = r2.cmdj('itj')['md5']
 
     for fcn_va in args.offsets:
 
@@ -232,6 +238,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 
 # EOF
