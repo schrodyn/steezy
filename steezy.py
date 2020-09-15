@@ -126,7 +126,7 @@ def gen_yara_rule(rules: dict, rulename=None):
     for file_md5 in rules:
 
         if rulename is None:
-            rulename = f"rule_{file_md5}"
+            rulename = f"steezy_{file_md5}"
 
         print(f"\nrule {rulename} {{\n")
 
@@ -134,7 +134,7 @@ def gen_yara_rule(rules: dict, rulename=None):
 
         meta = (
             "    meta:\n"
-            f"        author = \"Schrodinger\"\n"
+            f"        author = \"Steezy\"\n"
             f"        md5 = \"{file_md5}\"\n"
             )
 
