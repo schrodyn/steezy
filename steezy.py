@@ -125,9 +125,9 @@ def gen_r2_yara_blocks(r2, fcn_va, file_bits):
     '''Generate a rule for the function's basic blocks.'''
 
     if file_bits == 32:
-        range_max = '10'
-    elif file_bits == 64:
         range_max = '6'
+    elif file_bits == 64:
+        range_max = '10'
 
     rule = ""
 
