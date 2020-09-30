@@ -42,6 +42,12 @@ rule steezy_5d59311fc5407d55c96016dbc4e72006 {
 }
 ```
 
+Steezy will generate three rules:
+
+* Rule with static bytes, not so useful.
+* Rule with Yara wildcards using r2's instruction mask.
+* Rule with Yara wildcards using r2's instruction mask and Yara ranges based around function blocks.
+
 ## Additional Resources
 Some other tools I've used for generating Yara rules which lead me to creating
 my own.
