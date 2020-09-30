@@ -2,6 +2,8 @@
 Steezy is a python tool for ghetto generation of Yara rules from the VA
 of a function in a compiled executable.
 
+[Obligatory blog post.](https://musings.konundrum.org/2020/09/30/steezy.html)
+
 ## Installation
 * Install dependancies.
 * Clone git repo.
