@@ -121,6 +121,58 @@ def gen_r2_yara_wild(r2, fcn_va):
 
     return f"$r2_wildcard_{fcn_va} = {{{rule}}}"
 
+def gen_r2_yara_blocks(r2, fcn_va, file_bits):
+    '''Generate a rule for the function's basic blocks.'''
+
+    if file_bits == 32:
+        range_max = '6'
+    elif file_bits == 64:
+        range_max = '10'
+
+    rule = ""
+
+    # Make sure r2 is at the beginning of the function.
+    r2.cmd(f"s {fcn_va}")
+
+    basic_blocks = r2.cmdj(f"afbj@{fcn_va}")
+
+    for bb in basic_blocks:
+
+        bb_addr = bb['addr']
+        bb_ninstr = bb['ninstr']
+
+        j_instr = r2.cmdj(f"aoj {bb_ninstr}@{bb_addr}")
+
+        for instr in j_instr:
+
+            instr_type = instr['type']
+
+            if 'jmp' in instr_type:
+                yara = f"[2-{range_max}]"
+            else:
+                fcn_hex_bytes = instr['bytes']
+
+                logging.debug("Disasm: %s " % instr['disasm'])
+
+                fcn_bytes = bytes.fromhex(fcn_hex_bytes)
+
+                mask = bytes.fromhex(instr['mask'])
+
+                result = bytearray()
+
+                for i in range(len(fcn_bytes)):
+                    result.append(fcn_bytes[i] & mask[i])
+
+                yara = result.hex().replace('00', '??')
+
+            logging.debug("Yara string %s" % yara)
+
+            rule += yara
+
+    logging.debug("Yara rule %s" % rule)
+
+    return f"$r2_blocks_{fcn_va} = {{{rule}}}"
+
 def gen_yara_rule(rules: dict, rulename=None):
 
     for file_md5 in rules:
@@ -220,6 +272,7 @@ def main():
         logging.debug(yara_r2_static)
 
         yara_r2_wild = gen_r2_yara_wild(r2, fcn_va)
+        yara_r2_blocks = gen_r2_yara_blocks(r2, fcn_va, file_bits)
 
         yara_mkyara = mk_yara(bytes.fromhex(opcodes), file_bits)
         yara_mkyara = re.sub(
@@ -230,7 +283,7 @@ def main():
             rules[file_md5] = {}
 
         rules[file_md5][fcn_va] =\
-            [yara_r2_static, yara_r2_wild, yara_mkyara]
+            [yara_r2_static, yara_r2_wild, yara_r2_blocks, yara_mkyara]
 
     gen_yara_rule(
         rules,
