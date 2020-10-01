@@ -6,6 +6,7 @@
 Python script written to make a lazy Irish person do less work.
 """
 
+import os
 import re
 import sys
 import logging
@@ -246,6 +247,10 @@ def main():
         )
         logging.getLogger().setLevel(logging.INFO)
 
+    if not os.path.isfile(args.filepath):
+        logging.error("File does not exist: %s", args.filepath)
+        sys.exit(1)
+
     rules = {}
 
     r2 = get_r2(args.filepath)
@@ -299,7 +304,6 @@ def main():
             rules[file_md5] = {}
 
         rules[file_md5][fcn_va] = yara_rules
-            #[yara_r2_static, yara_r2_wild, yara_r2_blocks, yara_mkyara]
 
     gen_yara_rule(
         rules,
