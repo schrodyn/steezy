@@ -136,6 +136,11 @@ def gen_r2_yara_blocks(r2, fcn_va, file_bits):
 
     basic_blocks = r2.cmdj(f"afbj@{fcn_va}")
 
+    # If there are no code blocks then the rule generated here will be
+    # the same as the r2_wildcar rule. So no point, YA DOPE!
+    if len(basic_blocks) == 1:
+        return None
+
     for bb in basic_blocks:
 
         bb_addr = bb['addr']
@@ -252,6 +257,8 @@ def main():
 
     for fcn_va in args.offsets:
 
+        yara_rules = []
+
         r2.cmd(f"af@{fcn_va}")
         r2.cmd(f"s {fcn_va}")
 
@@ -269,21 +276,30 @@ def main():
             r'hex_[^\s]+', f"r2_static_{fcn_va}",
             yara_r2_static.strip())
 
+        yara_rules.append(yara_r2_static)
+
         logging.debug(yara_r2_static)
 
         yara_r2_wild = gen_r2_yara_wild(r2, fcn_va)
+        yara_rules.append(yara_r2_wild)
+
         yara_r2_blocks = gen_r2_yara_blocks(r2, fcn_va, file_bits)
+
+        if yara_r2_blocks:
+            yara_rules.append(yara_r2_blocks)
 
         yara_mkyara = mk_yara(bytes.fromhex(opcodes), file_bits)
         yara_mkyara = re.sub(
             r'chunk_[^\s]+', f"mkyara_{fcn_va}",
             yara_mkyara)
 
+        yara_rules.append(yara_mkyara)
+
         if file_md5 not in rules.keys():
             rules[file_md5] = {}
 
-        rules[file_md5][fcn_va] =\
-            [yara_r2_static, yara_r2_wild, yara_r2_blocks, yara_mkyara]
+        rules[file_md5][fcn_va] = yara_rules
+            #[yara_r2_static, yara_r2_wild, yara_r2_blocks, yara_mkyara]
 
     gen_yara_rule(
         rules,
