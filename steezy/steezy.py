@@ -324,7 +324,7 @@ rule steezy_{}
 {{
     meta:
         author = "Steezy (https://github.com/schrodyn/steezy)"
-        hash1 = {}
+        hash1 = "{}"
 
     strings:
 {}
