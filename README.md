@@ -13,7 +13,7 @@ Supported file formats:
 * ELF
 * MACH-O
 
-Shellcode is not yet supported. NET is not yet supported but will be
+Shellcode is not yet supported. .NET is not yet supported but will be
 Real Soon Now™.
 
 [Original blog post.](https://musings.konundrum.org/2020/09/30/steezy.html)

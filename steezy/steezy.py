@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Main Symhunt Source."""
+"""Main Steezy Source."""
 
 #import re
 import logging
