@@ -49,8 +49,8 @@ class Steezy:
         yara_strings = []
 
         logger.debug(
-            "Generating yara rule starting at virtual address: %s",
-            self.filepath
+            "Generating yara rule starting at virtual address: 0x%x",
+            eva
         )
 
         if eva is None:
@@ -73,7 +73,7 @@ class Steezy:
 
         logger.debug('r2z_yara_wild: %s', r2z_yara_wild)
 
-        if eva:
+        if eva is not None:
             distance = self.get_next_va(eva) - bva
             logger.debug(f'Distance: {distance}')
             cmd = f'p8 {distance}'
@@ -96,7 +96,7 @@ class Steezy:
 
         logging.debug(f'Range: {bva:x}:{eva:x}')
 
-        eva += self.r2z.cmdj(f'aoj@{eva}')[0].get('size')
+        eva += self.r2z.cmdj(f'aoj @ {eva}')[0].get('size')
 
         logging.debug(f'Last VA: 0x{eva:x}')
 
@@ -106,7 +106,7 @@ class Steezy:
 
         while current_va < eva:
             logger.debug(f'Current VA: 0x{current_va:x}')
-            j_instr = self.r2z.cmdj(f'aoj@{current_va}')
+            j_instr = self.r2z.cmdj(f'aoj @ {current_va}')
             yara_str += self._instr_to_yara_str(j_instr)
             current_va += j_instr[-1].get('size')
 
@@ -123,14 +123,15 @@ class Steezy:
         # Command: afb
 
         # Analyse function at va.
-        self.r2z.cmd(f'af@{fva}')
+        self.r2z.cmd(f'af @ {fva}')
 
 
     def get_next_va(self, va: int) -> int:
         """
         Given a virtual address, returns the address of the next instruction.
         """
-        return self.r2z.cmdj(f'aoj@{va}')[0].get('addr')
+        logger.debug("0x%x", va)
+        return self.r2z.cmdj(f'aoj @ {va}')[0].get('addr')
 
 
     def get_r2z_yara_static(self, bva: int, eva: int = None) -> str:
@@ -183,7 +184,7 @@ class Steezy:
 
                 instr_va =  op['offset']
 
-                j_instr = self.r2z.cmdj(f'aoj@{instr_va}')
+                j_instr = self.r2z.cmdj(f'aoj @ {instr_va}')
                 yara_str += self._instr_to_yara_str(j_instr)
 
             return f'{{{yara_str}}}'
@@ -201,7 +202,7 @@ class Steezy:
         # Analyse function. Seek to va.
         self.r2z.cmd(f's {fva}')
 
-        code_blocks = self.r2z.cmdj(f"afbj@{fva}")
+        code_blocks = self.r2z.cmdj(f"afbj @ {fva}")
 
         if len(code_blocks) == 1:
             return None
@@ -210,7 +211,7 @@ class Steezy:
             bb_va = cb['addr']
             bb_ninstr = cb['ninstr']
 
-            j_instr = self.r2z.cmdj(f"aoj {bb_ninstr}@{bb_va}")
+            j_instr = self.r2z.cmdj(f"aoj {bb_ninstr} @ {bb_va}")
 
             yara_str += self._instr_to_yara_str(j_instr, True)
 
