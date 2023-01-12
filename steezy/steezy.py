@@ -102,7 +102,7 @@ class Steezy:
             yara_str += self._instr_to_yara_str(j_instr)
             current_va += j_instr[-1].get('size')
 
-        return f'{{{yara_str}}}'
+        return f'{{\n{yara_str}\n        }}'
 
 
     def r2z_define_function(self, fva: int, size = None) -> None:
@@ -179,7 +179,7 @@ class Steezy:
                 j_instr = self.r2z.cmdj(f'aoj @ {instr_va}')
                 yara_str += self._instr_to_yara_str(j_instr)
 
-            return f'{{{yara_str}}}'
+            return f'{{\n{yara_str}        }}'
 
 
     def get_r2z_yara_blocks(self, fva: int) -> str:
@@ -207,7 +207,7 @@ class Steezy:
 
             yara_str += self._instr_to_yara_str(j_instr, True)
 
-        return f'{{{yara_str}}}'
+        return f'{{\n{yara_str}        }}'
 
 
     def _instr_to_yara_str(self, j_instr: list, mask_branch=False) -> str:
@@ -223,25 +223,29 @@ class Steezy:
         if bits == 32:
             range_max = 6
         elif bits == 64:
-            range_max = 10
+            # two-byte instructions - 15? Sound right? Meh.
+            range_max = 13
 
         for instr in j_instr:
-            instr_type = instr['type']
+            instr_type = instr.get('type')
+            va = instr.get('addr')
+            disasm = instr.get('disasm')
 
             if mask_branch and 'jmp' in instr_type:
-                hex_str += f"[2-{range_max}]"
+                range_str = f"[2-{range_max}]"
+                hex_str += f"            {range_str:<20} // 0x{va:08}: {disasm}\n"
             else:
-                logger.debug("Disasm: %s " % instr['disasm'])
+                logger.debug("Disasm: %s", disasm)
 
-                fcn_bytes = bytes.fromhex(instr['bytes'])
-                mask = bytes.fromhex(instr['mask'])
+                fcn_bytes = bytes.fromhex(instr.get('bytes'))
+                mask = bytes.fromhex(instr.get('mask'))
                 result = bytearray()
 
                 for i, b in enumerate(fcn_bytes):
                      result.append(b & mask[i])
 
-                bytes_masked = result.hex().replace('00', '??')
-                hex_str += bytes_masked
+                bytes_masked = result.hex(' ').replace('00', '??')
+                hex_str += f'            {bytes_masked:<20} // 0x{va:08}: {disasm}\n'
 
         return hex_str
 
