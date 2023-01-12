@@ -8,22 +8,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-r2z_installed = False
+cmd_found = ''
 
-for cmd in ['rizin', 'r2', 'radare2']:
+for cmd in ['rizin', 'radare2']:
     if which(cmd) is not None:
-        r2z_installed = True
+        cmd_found = cmd
+        logger.debug('cmd (%s) installed.', cmd)
 
-if r2z_installed == False:
+if not cmd_found:
     logger.error('Could not find rizin or radare2!')
     sys.exit(1)
 
 try:
-    import rzpipe as r_pipe
-except ImportError:
-    try:
+    if cmd_found == 'rizin':
+        import rzpipe as r_pipe
+    elif cmd_found == 'radare2':
         import r2pipe as r_pipe
-    except ImportError:
-        raise ImportError("Cannot find rzpipe or r2pipe")
+except ImportError:
+    raise ImportError("Cannot find rzpipe or r2pipe")
 
 from .steezy import Steezy
