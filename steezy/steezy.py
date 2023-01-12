@@ -48,7 +48,7 @@ class Steezy:
 
         logger.debug(
             "Generating yara rule starting at virtual address: 0x%x",
-            eva
+            bva
         )
 
         if eva is None:
