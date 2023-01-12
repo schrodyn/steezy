@@ -5,8 +5,6 @@
 import logging
 
 from steezy import r_pipe
-from mkyara import YaraGenerator
-from capstone import CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 
 logger = logging.getLogger(__name__)
 
@@ -81,12 +79,6 @@ class Steezy:
             cmd = 'p8 $FS'
 
         fbytes = bytes.fromhex(self.r2z.cmd(cmd))
-        mkyara = self.get_mkyara(fbytes)
-
-        if mkyara not in yara_strings:
-            yara_strings.append(mkyara)
-
-        logger.debug('mkyara: %s', mkyara)
 
         self._make_rule(yara_strings)
 
@@ -265,57 +257,6 @@ class Steezy:
         #r2z = r_pipe.open(self.filepath)
         return r2z
 
-
-    def get_mkyara(self, instr_bytes: bytes, bits=32):
-        """Top-level function to invoke mkYara."""
-
-        if bits == 64:
-            gen = YaraGenerator("normal", CS_ARCH_X86, CS_MODE_64)
-        else:
-            gen = YaraGenerator("normal", CS_ARCH_X86, CS_MODE_32)
-
-        logger.debug("Performing mk_yara analysis")
-
-        gen.add_chunk(instr_bytes, offset=0x0)
-        rule = gen.generate_rule()
-        self._mk_yara_getrule(rule)
-        rule_str = rule._writer.contents()
-
-        logger.debug(rule_str)
-
-        rule_norm = rule_str.replace('\n', '').replace(' ', '').lower()
-
-        return f'{{{rule_norm}}}'
-
-
-    def _mk_yara_getrule(self, rule):
-        """Format out mkYara strings."""
-
-        class StringType():
-            """Borrowed from mkYara. Used in place of an enum. Lazy."""
-            STRING = 1
-            HEX = 2
-            REGEX = 3
-
-        for rule_str in rule.strings:
-            if rule_str.string_type == StringType.STRING:
-                logger.error('Unhandled mkYara rule str type %s', rule_str)
-            elif rule_str.string_type == StringType.HEX:
-                value = rule_str.value.rstrip('\n')
-                rule._writer.write_block(value)
-            else:
-                raise Exception("not implemented!")
-
-        rule._writer.dedent()
-        rule._writer.writeline("")
-
-    # TODO: PAIN!
-    # https://twitter.com/wxs/status/1315761318683607048?s=21
-    #def _tidy_yara_str(self, matchobj: re.Match) -> str:
-    #    match = matchobj.group(0)
-    #    if len(match) % 2 == 0:
-    #        return f'[{int(len(match)/2)}]'
-
     def _make_rule(self, yara_strings: list) -> str:
 
         sha256 = self.r2z.cmdj('itj').get('sha256')
@@ -341,5 +282,3 @@ rule steezy_{}
             strings_body += f'        $a{i} = {yara_str}\n'
 
         print(rule.format(sha256, sha256, strings_body))
-
-
