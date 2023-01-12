@@ -229,11 +229,12 @@ class Steezy:
         for instr in j_instr:
             instr_type = instr.get('type')
             va = instr.get('addr')
-            disasm = instr.get('disasm')
+            disasm = instr.get('opcode')
+            instr_bytes = bytes.fromhex(instr.get('bytes')).hex(' ')
 
             if mask_branch and 'jmp' in instr_type:
                 range_str = f"[2-{range_max}]"
-                hex_str += f"            {range_str:<20} // 0x{va:08}: {disasm}\n"
+                hex_str += f"            {range_str:<20} // 0x{va:08x}: {disasm:35} ({instr_bytes})\n"
             else:
                 logger.debug("Disasm: %s", disasm)
 
@@ -245,7 +246,7 @@ class Steezy:
                      result.append(b & mask[i])
 
                 bytes_masked = result.hex(' ').replace('00', '??')
-                hex_str += f'            {bytes_masked:<20} // 0x{va:08}: {disasm}\n'
+                hex_str += f'            {bytes_masked:<20} // 0x{va:08x}: {disasm:35} ({instr_bytes})\n'
 
         return hex_str
 
