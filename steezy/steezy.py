@@ -123,7 +123,10 @@ class Steezy:
         Given a virtual address, returns the address of the next instruction.
         """
         logger.debug("0x%x", va)
-        return self.r2z.cmdj(f'aoj @ {va}')[0].get('addr')
+        addr = self.r2z.cmdj(f'aoj @ {va}')[0].get('addr')
+        size = self.r2z.cmdj(f'aoj @ {va}')[0].get('size')
+        # TODO: Make sure next address is valid?
+        return self.r2z.cmdj(f'aoj @ {addr + size}')[0].get('addr')
 
 
     def get_r2z_yara_static(self, bva: int, eva: int = None) -> str:
