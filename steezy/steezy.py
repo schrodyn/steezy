@@ -227,7 +227,7 @@ class Steezy:
             range_max = 6
         elif bits == 64:
             # two-byte instructions - 15? Sound right? Meh.
-            range_max = 13
+            range_max = 15
 
         for instr in j_instr:
             instr_type = instr.get('type')
