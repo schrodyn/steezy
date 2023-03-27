@@ -1,71 +1,72 @@
-# -*- coding: utf-8 -*-
-""" Steezy """
+'''Steezy cli interface.'''
 
 import sys
-
-import logging
 import string
+import logging
 import os.path
+import argparse
+
 import steezy
 
-from steezy.lib import MyParser
-from argparse import ArgumentTypeError
-
 logger = logging.getLogger(__name__)
+
+class MyParser(argparse.ArgumentParser):
+    """Custom argparser error message."""
+
+    def error(self, message):
+        sys.stderr.write(f'\n*** error: {message}\n\n')
+        self.print_help()
+        sys.exit(2)
 
 def file_exists(filepath: str) -> str:
     """Check if the user filepath arg exists."""
     if not os.path.isfile(filepath):
-        raise ArgumentTypeError(
-            'File does not exist: {}'.format(filepath)
+        raise argparse.ArgumentTypeError(
+            'File does not exist: ', str(filepath)
         )
-    else:
-        return filepath
+    return filepath
 
 
 def check_offset(offset: str) -> int:
     """Validate virtual address offset argument from user."""
 
     try:
-        # TODO: Check if hex without prefix
         if offset.startswith('0x') or\
             all(c in string.hexdigits for c in offset):
             return int(offset, 16)
-        else:
-            return int(offset)
-    except:
-        raise ArgumentTypeError(
-            'Invalid virtual address: {}'.format(offset)
-        )
+        return int(offset)
+    except Exception as exc:
+        raise argparse.ArgumentTypeError(
+            'Invalid virtual address: ', str(offset)
+        ) from exc
 
 def check_range(offset_range: str) -> list:
     """Validate virtual address offset argument from user."""
 
     if ':' not in offset_range:
-        raise ArgumentTypeError(
-            'Invalid virtual address range: {}'.format(offset_range)
+        raise argparse.ArgumentTypeError(
+            'Invalid virtual address range: ', str(offset_range)
         )
 
     try:
         offsets = []
         for offset in offset_range.split(':'):
-            # TODO: Check if hex without prefix
             if offset.startswith('0x') or\
                 all(c in string.hexdigits for c in offset):
                 offsets.append(int(offset, 16))
             else:
                 offsets.append(int(offset))
         return offsets
-    except:
-        raise ArgumentTypeError(
-            'Invalid virtual address: {}'.format(offset_range)
-        )
+    except Exception  as exc:
+        raise argparse.ArgumentTypeError(
+            'Invalid virtual address: ', str(offset_range)
+        ) from exc
 
 def main():
     """Public Static Void Main()"""
 
     parser = MyParser(
-        description='Steezy Ghetto Yara Rule Generator'
+        description='Steezy - Ghetto Yara Rule Generator'
     )
     parser.add_argument(
         "-f", "--filepath",
@@ -113,12 +114,13 @@ def main():
         logging.getLogger().setLevel(logging.INFO)
 
     steezee = steezy.Steezy()
-    steezee.open_file(args.filepath)
+    steezee.load_file(args.filepath)
 
     if args.offset:
-        steezee.gen_yara(args.offset)
+        hex_strings = steezee.gen_yara(args.offset)
+        print(steezee.make_rule(hex_strings))
 
     if args.offset_range:
         (start, end) = args.offset_range
-        steezee.gen_yara(start, end)
-
+        hex_strings = steezee.gen_yara(start, end)
+        print(steezee.make_rule(hex_strings))

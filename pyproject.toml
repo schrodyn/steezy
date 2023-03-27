@@ -12,7 +12,6 @@ license = {file = "LICENSE"}
 dependencies = [
     "r2pipe",
     "rzpipe",
-    "yara-python",
 ]
 
 [project.scripts]

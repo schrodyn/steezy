@@ -1,5 +1,11 @@
-# -*- coding: utf-8 -*-
-import sys
+'''Initialise Steezy package.
+
+Steezy can be imported by: import Steezy.
+
+Initialisation will check first if the rizin or radare2 binaries are
+available in the current environment PATH.
+'''
+
 import logging
 from shutil import which
 
@@ -8,23 +14,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-cmd_found = ''
+R2Z_CMD = ''
 
 for cmd in ['rizin', 'radare2']:
     if which(cmd) is not None:
-        cmd_found = cmd
-        logger.debug('cmd (%s) installed.', cmd)
+        R2Z_CMD = cmd
 
-if not cmd_found:
-    logger.error('Could not find rizin or radare2!')
-    sys.exit(1)
-
-try:
-    if cmd_found == 'rizin':
-        import rzpipe as r_pipe
-    elif cmd_found == 'radare2':
-        import r2pipe as r_pipe
-except ImportError:
-    raise ImportError("Cannot find rzpipe or r2pipe")
+if R2Z_CMD == 'rizin':
+    import rzpipe as r_pipe
+elif R2Z_CMD == 'radare2':
+    import r2pipe as r_pipe
+else:
+    raise FileNotFoundError('Unable to locate either rizin or radare2 commands in current PATH.')
 
 from .steezy import Steezy
